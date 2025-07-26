@@ -2,6 +2,11 @@
   "name": "feediant",
   "private": true,
   "type": "module",
+  "imports": {
+    "#app/*": "./app/*",
+    "#prisma/*": "./generated/prisma/*",
+    "#tests/*": "./tests/*"
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint .",
@@ -22,6 +27,7 @@
     "@epic-web/invariant": "^1.0.0",
     "@epic-web/remember": "^1.1.0",
     "@modelcontextprotocol/sdk": "^1.17.0",
+    "@prisma/client": "^6.12.0",
     "@react-router/node": "^7.7.1",
     "@react-router/serve": "^7.7.1",
     "@remix-run/lazy-file": "^3.5.0",
@@ -32,6 +38,7 @@
     "mime-types": "^3.0.1",
     "music-metadata": "^11.7.3",
     "p-limit": "^6.2.0",
+    "prisma": "^6.12.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.7.1",

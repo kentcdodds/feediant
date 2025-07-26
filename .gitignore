@@ -7,3 +7,5 @@
 
 .env
 tests/fixtures/1/data
+
+/generated/prisma
