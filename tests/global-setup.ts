@@ -6,8 +6,11 @@ import { saveGlobalSetup, waitFor } from './utils.js'
 
 export default async function globalSetup() {
 	const token = process.env.MCP_TOKEN ?? 'test-token'
-	const mediaPath =
-		process.env.MEDIA_PATH ?? path.join(process.cwd(), 'fixtures', '1', 'media')
+	const mediaPaths =
+		process.env.MEDIA_PATHS ??
+		path.join(process.cwd(), 'fixtures', '1', 'media', 'audiobooks') +
+			'\n' +
+			path.join(process.cwd(), 'fixtures', '1', 'media', 'family-videos')
 	const dataPath =
 		process.env.DATA_PATH ?? path.join(process.cwd(), 'fixtures', '1', 'data')
 
@@ -18,7 +21,7 @@ export default async function globalSetup() {
 			...process.env,
 			PORT: port.toString(),
 			MCP_TOKEN: token,
-			MEDIA_PATH: mediaPath,
+			MEDIA_PATHS: mediaPaths,
 			DATA_PATH: dataPath,
 		},
 	})
@@ -62,7 +65,7 @@ export default async function globalSetup() {
 		throw error
 	}
 
-	await saveGlobalSetup({ port, token, mediaPath, dataPath })
+	await saveGlobalSetup({ port, token, mediaPaths, dataPath })
 
 	return async function globalTeardown() {
 		child.kill()

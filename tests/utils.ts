@@ -53,7 +53,7 @@ export function createDeferred<T>() {
 const globalSetupSchema = z.object({
 	port: z.number(),
 	token: z.string(),
-	mediaPath: z.string(),
+	mediaPaths: z.string(),
 	dataPath: z.string(),
 })
 
@@ -65,6 +65,8 @@ const globalSetupPath = path.join(
 export async function saveGlobalSetup(
 	globalSetup: z.input<typeof globalSetupSchema>,
 ) {
+	await fs.mkdir(path.dirname(globalSetupPath), { recursive: true })
+
 	await fs.writeFile(globalSetupPath, JSON.stringify(globalSetup, null, 2))
 }
 

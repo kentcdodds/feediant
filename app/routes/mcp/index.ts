@@ -1,7 +1,10 @@
 import { invariant, invariantResponse } from '@epic-web/invariant'
 import { redirect } from 'react-router'
+import { getEnv } from '#app/utils/env.server.ts'
 import { type Route } from './+types/index.ts'
 import { connect, requestStorage } from './mcp.server.ts'
+
+const { MCP_TOKEN } = getEnv()
 
 export async function loader({ request }: Route.LoaderArgs) {
 	if (request.headers.get('accept')?.includes('text/html')) {
@@ -38,15 +41,15 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 async function requireAuth(request: Request) {
-	const envToken = process.env.MCP_TOKEN
-	invariant(envToken, 'MCP_TOKEN is not set')
-
 	const requestUrl = new URL(request.url)
 	const requestToken = requestUrl.searchParams.get('token')
-	invariant(requestToken, 'Token is not set')
-	invariant(requestToken === envToken, 'Invalid token')
+	invariantResponse(requestToken, 'token query parameter is not set', {
+		status: 401,
+	})
 
-	invariantResponse(requestToken === envToken, 'Unauthorized', { status: 401 })
+	invariantResponse(requestToken === MCP_TOKEN, 'invalid token', {
+		status: 401,
+	})
 
 	// maybe one day we'll have a real auth system, but for now we'll just use a token
 	return {
