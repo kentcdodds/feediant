@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import path from 'node:path'
 import {
 	cachified,
 	type CacheEntry,
@@ -13,9 +12,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { z } from 'zod'
 import { getEnv } from './env.server.ts'
 
-const { DATA_PATH } = getEnv()
-
-const CACHE_DATABASE_PATH = path.join(DATA_PATH, 'cache.db')
+const { CACHE_DATABASE_PATH } = getEnv()
 
 const cacheDb = remember('cacheDb', createDatabase)
 

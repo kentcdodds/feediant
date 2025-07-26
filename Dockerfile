@@ -47,34 +47,33 @@
 #   /media*       - Media directories (mount your media here)
 
 FROM node:24-bookworm-slim AS development-dependencies-env
-COPY . /app
-WORKDIR /app
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+COPY . /feediant
+WORKDIR /feediant
 RUN npm ci
 
 FROM node:24-bookworm-slim AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
-WORKDIR /app
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+COPY ./package.json package-lock.json /feediant/
+WORKDIR /feediant
 RUN npm ci --omit=dev
 
 FROM node:24-bookworm-slim AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
+COPY . /feediant/
+COPY --from=development-dependencies-env /feediant/node_modules /feediant/node_modules
+WORKDIR /feediant
 RUN npx prisma generate
 RUN npm run build
 
 FROM node:24-bookworm-slim
 RUN apt-get update && apt-get install -y ffmpeg sqlite3 && rm -rf /var/lib/apt/lists/*
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
-COPY --from=build-env /app/generated /app/generated
-COPY --from=build-env /app/prisma /app/prisma
-COPY ./startup.sh /app/startup.sh
-WORKDIR /app
-
-# Required env variables:
-# ENV MCP_TOKEN
+COPY ./package.json package-lock.json /feediant/
+COPY --from=production-dependencies-env /feediant/node_modules /feediant/node_modules
+COPY --from=build-env /feediant/build /feediant/build
+COPY --from=build-env /feediant/app/prisma /feediant/app/prisma
+COPY --from=build-env /feediant/prisma /feediant/prisma
+COPY ./startup.sh /feediant/startup.sh
+WORKDIR /feediant
 
 ENV DATA_PATH="/data"
 ENV MEDIA_PATHS="/media"
@@ -94,6 +93,6 @@ RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_PATH" > /usr/local/bin/database-
 # and one for the cache database
 RUN echo "#!/bin/sh\nset -x\nsqlite3 \$CACHE_DATABASE_PATH" > /usr/local/bin/cache-database-cli && chmod +x /usr/local/bin/cache-database-cli
 
-RUN chmod +x /app/startup.sh
+RUN chmod +x /feediant/startup.sh
 
-CMD ["/app/startup.sh"]
+CMD ["/feediant/startup.sh"]

@@ -2,3 +2,4 @@
 /.react-router/
 /build/
 package-lock.json
+/app/prisma

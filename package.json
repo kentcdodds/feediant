@@ -4,7 +4,6 @@
   "type": "module",
   "imports": {
     "#app/*": "./app/*",
-    "#prisma/*": "./generated/prisma/*",
     "#tests/*": "./tests/*"
   },
   "scripts": {
@@ -27,6 +26,7 @@
     "@epic-web/invariant": "^1.0.0",
     "@epic-web/remember": "^1.1.0",
     "@modelcontextprotocol/sdk": "^1.17.0",
+    "@prisma/adapter-better-sqlite3": "^6.12.0",
     "@prisma/client": "^6.12.0",
     "@react-router/node": "^7.7.1",
     "@react-router/serve": "^7.7.1",

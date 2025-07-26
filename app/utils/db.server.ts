@@ -1,8 +1,13 @@
 import { styleText } from 'node:util'
 import { remember } from '@epic-web/remember'
-import { PrismaClient } from '#prisma/client'
+import { PrismaBetterSQLite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaClient } from '#app/prisma/client'
+import { getEnv } from '#app/utils/env.server'
+
+const { DATABASE_URL } = getEnv()
 
 export const prisma = remember('prisma', () => {
+	const adapter = new PrismaBetterSQLite3({ url: DATABASE_URL })
 	// NOTE: if you change anything in this function you'll need to restart
 	// the dev server to see your changes.
 
@@ -10,6 +15,7 @@ export const prisma = remember('prisma', () => {
 	const logThreshold = 20
 
 	const client = new PrismaClient({
+		adapter,
 		log: [
 			{ level: 'query', emit: 'event' },
 			{ level: 'error', emit: 'stdout' },

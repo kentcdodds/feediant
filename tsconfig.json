@@ -7,8 +7,7 @@
 		"rootDirs": [".", "./.react-router/types"],
 		"paths": {
 			"#app/*": ["./app/*"],
-			"#tests/*": ["./tests/*"],
-			"#prisma/*": ["./generated/prisma/*"]
+			"#tests/*": ["./tests/*"]
 		}
 	}
 }
