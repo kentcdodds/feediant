@@ -6,7 +6,8 @@ const schema = z.object({
 	MCP_TOKEN: z.string(),
 	MEDIA_PATHS: z.string().transform((value) =>
 		value
-			.split('\n')
+			.trim()
+			.split('::')
 			.map((line) => line.trim())
 			.filter(Boolean)
 			.map((pathStr) =>
@@ -21,16 +22,5 @@ const schema = z.object({
 })
 
 export function getEnv() {
-	const parsed = schema.safeParse(process.env)
-
-	if (parsed.success === false) {
-		console.error(
-			'❌ Invalid environment variables:',
-			parsed.error.flatten().fieldErrors,
-		)
-
-		throw new Error('Invalid environment variables')
-	}
-
-	return parsed.data
+	return schema.parse(process.env)
 }

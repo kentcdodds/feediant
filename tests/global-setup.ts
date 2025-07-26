@@ -9,7 +9,7 @@ export default async function globalSetup() {
 	const mediaPaths =
 		process.env.MEDIA_PATHS ??
 		path.join(process.cwd(), 'fixtures', '1', 'media', 'audiobooks') +
-			'\n' +
+			'::' +
 			path.join(process.cwd(), 'fixtures', '1', 'media', 'family-videos')
 	const dataPath =
 		process.env.DATA_PATH ?? path.join(process.cwd(), 'fixtures', '1', 'data')
