@@ -53,9 +53,15 @@ export function createDeferred<T>() {
 const globalSetupSchema = z.object({
 	port: z.number(),
 	token: z.string(),
+	mediaPath: z.string(),
+	dataPath: z.string(),
 })
 
-const globalSetupPath = path.join(tmpdir(), 'global-setup.json')
+const globalSetupPath = path.join(
+	tmpdir(),
+	'feediant-test',
+	'global-setup.json',
+)
 export async function saveGlobalSetup(
 	globalSetup: z.input<typeof globalSetupSchema>,
 ) {

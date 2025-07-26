@@ -1,15 +1,26 @@
 import { spawn } from 'node:child_process'
+import path from 'node:path'
 import { invariant } from '@epic-web/invariant'
 import getPort from 'get-port'
 import { saveGlobalSetup, waitFor } from './utils.js'
 
 export default async function globalSetup() {
 	const token = process.env.MCP_TOKEN ?? 'test-token'
+	const mediaPath =
+		process.env.MEDIA_PATH ?? path.join(process.cwd(), 'fixtures', '1', 'media')
+	const dataPath =
+		process.env.DATA_PATH ?? path.join(process.cwd(), 'fixtures', '1', 'data')
 
 	const port = await getPort()
 	const child = spawn('npm', ['run', 'dev'], {
 		stdio: 'pipe',
-		env: { ...process.env, PORT: port.toString(), MCP_TOKEN: token },
+		env: {
+			...process.env,
+			PORT: port.toString(),
+			MCP_TOKEN: token,
+			MEDIA_PATH: mediaPath,
+			DATA_PATH: dataPath,
+		},
 	})
 
 	// Buffer output to display only on error
@@ -51,7 +62,7 @@ export default async function globalSetup() {
 		throw error
 	}
 
-	await saveGlobalSetup({ port, token })
+	await saveGlobalSetup({ port, token, mediaPath, dataPath })
 
 	return async function globalTeardown() {
 		child.kill()

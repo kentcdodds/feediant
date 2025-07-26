@@ -6,3 +6,4 @@
 /build/
 
 .env
+tests/fixtures/1/data
