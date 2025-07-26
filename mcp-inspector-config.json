@@ -1,0 +1,12 @@
+{
+	"mcpServers": {
+		"feediant": {
+			"transport": "streamable-http",
+			"serverUrl": "http://localhost:5173/mcp?token=local-token",
+			"env": {
+				"MCP_SERVER_REQUEST_TIMEOUT": "30000",
+				"MCP_REQUEST_TIMEOUT_RESET_ON_PROGRESS": "true"
+			}
+		}
+	}
+}
