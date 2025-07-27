@@ -60,7 +60,7 @@ server.registerTool(
 	{
 		title: 'Search Media',
 		description:
-			'Search for media files by various fields (title, author, description, category, filepath, etc.)',
+			'Search for media files by various fields (title, author, description, category/genre, filepath, media type, publish date, etc.)',
 		inputSchema: {
 			query: z
 				.string()
@@ -69,7 +69,7 @@ server.registerTool(
 				.array(z.string())
 				.optional()
 				.describe(
-					'Specific fields to search in. If not provided, searches all fields. Available fields: title, author, description, category, filepath, contributor',
+					'Specific fields to search in. If not provided, searches all fields. Available fields: title, author, description, category, filepath, type, contentType, copyright, contributor, pubDate',
 				),
 			limit: z
 				.number()
@@ -90,10 +90,21 @@ server.registerTool(
 			'description',
 			'category',
 			'filepath',
+			'type',
+			'contentType',
+			'copyright',
 			{
 				key: 'contributor',
 				getValue: (item: any) =>
 					item.contributor?.map((c: any) => c.name).join(' ') || '',
+			},
+			{
+				key: 'pubDate',
+				getValue: (item: any) => {
+					if (!item.pubDate) return ''
+					const date = new Date(item.pubDate)
+					return isNaN(date.getTime()) ? '' : date.getFullYear().toString()
+				},
 			},
 		]
 
@@ -106,6 +117,16 @@ server.registerTool(
 							key: 'contributor',
 							getValue: (item: any) =>
 								item.contributor?.map((c: any) => c.name).join(' ') || '',
+						}
+					}
+					if (field === 'pubDate') {
+						return {
+							key: 'pubDate',
+							getValue: (item: any) => {
+								if (!item.pubDate) return ''
+								const date = new Date(item.pubDate)
+								return isNaN(date.getTime()) ? '' : date.getFullYear().toString()
+							},
 						}
 					}
 					return field

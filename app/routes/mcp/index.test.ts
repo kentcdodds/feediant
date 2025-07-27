@@ -215,3 +215,79 @@ test('search-media tool with contributor field in fields parameter', async () =>
 	expect(Array.isArray(searchResults)).toBe(true)
 	// The search should work correctly even when contributor is explicitly specified in fields
 })
+
+test('search-media tool searches by media type', async () => {
+	const { client } = await setupClient()
+
+	const result = await client.callTool({
+		name: 'search-media',
+		arguments: {
+			query: 'mp4',
+			fields: ['type', 'contentType'],
+		},
+	})
+
+	expect(result).toBeDefined()
+	const content = result.content as Array<{ type: string; text: string }>
+	const searchResults = JSON.parse(content[0]!.text)
+
+	expect(Array.isArray(searchResults)).toBe(true)
+	// Should find video files with mp4 type
+})
+
+test('search-media tool searches by copyright', async () => {
+	const { client } = await setupClient()
+
+	const result = await client.callTool({
+		name: 'search-media',
+		arguments: {
+			query: 'copyright',
+			fields: ['copyright'],
+		},
+	})
+
+	expect(result).toBeDefined()
+	const content = result.content as Array<{ type: string; text: string }>
+	const searchResults = JSON.parse(content[0]!.text)
+
+	expect(Array.isArray(searchResults)).toBe(true)
+	// Should search through copyright field
+})
+
+test('search-media tool searches by publish date year', async () => {
+	const { client } = await setupClient()
+
+	const result = await client.callTool({
+		name: 'search-media',
+		arguments: {
+			query: '2020',
+			fields: ['pubDate'],
+		},
+	})
+
+	expect(result).toBeDefined()
+	const content = result.content as Array<{ type: string; text: string }>
+	const searchResults = JSON.parse(content[0]!.text)
+
+	expect(Array.isArray(searchResults)).toBe(true)
+	// Should search by publication year (if any media has 2020 as pub date)
+})
+
+test('search-media tool searches by genre/category', async () => {
+	const { client } = await setupClient()
+
+	const result = await client.callTool({
+		name: 'search-media',
+		arguments: {
+			query: 'kids',
+			fields: ['category'],
+		},
+	})
+
+	expect(result).toBeDefined()
+	const content = result.content as Array<{ type: string; text: string }>
+	const searchResults = JSON.parse(content[0]!.text)
+
+	expect(Array.isArray(searchResults)).toBe(true)
+	// Should find media in the kids category/genre
+})
