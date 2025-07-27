@@ -322,3 +322,27 @@ test('search-media tool searches by genre/category', async () => {
 		expect(result.category).toContain("Children's Audiobooks")
 	})
 })
+
+test('search-media tool searches by contributor with fields parameter', async () => {
+	const { client } = await setupClient()
+
+	const result = await client.callTool({
+		name: 'search-media',
+		arguments: {
+			query: 'Stiller',
+			fields: ['contributor'],
+		},
+	})
+
+	expect(result).toBeDefined()
+	const content = result.content as Array<{ type: string; text: string }>
+	const searchResults = JSON.parse(content[0]!.text)
+
+	expect(Array.isArray(searchResults)).toBe(true)
+	expect(searchResults).toHaveLength(1)
+	
+	// Should find the Walter Mitty audiobook narrated by Ben Stiller
+	const stillerResult = searchResults[0]
+	expect(stillerResult.title).toBe('Free: The Secret Life of Walter Mitty')
+	expect(stillerResult.contributor.map((c: any) => c.name)).toEqual(['Ben Stiller'])
+})

@@ -80,8 +80,11 @@ server.registerTool(
 	async ({ query, fields, limit }) => {
 		const allMedia = await getAllFileMetadatas()
 
-		// Filter out null metadata entries
-		const validMedia = allMedia.filter(Boolean)
+		// Filter out null metadata entries and preprocess contributor field for search
+		const validMedia = allMedia.filter(Boolean).map(media => ({
+			...media,
+			contributorNames: media?.contributor?.map((c: any) => c.name).join(' ') || ''
+		}))
 
 		// Define the search keys - these are the fields that will be searched
 		const defaultKeys = [
@@ -93,11 +96,7 @@ server.registerTool(
 			'type',
 			'contentType',
 			'copyright',
-			{
-				key: 'contributor',
-				getValue: (item: any) =>
-					item.contributor?.map((c: any) => c.name).join(' ') || '',
-			},
+			'contributorNames',
 			{
 				key: 'pubDate',
 				getValue: (item: any) => {
@@ -113,11 +112,7 @@ server.registerTool(
 		const searchKeys = fields
 			? fields.map((field) => {
 					if (field === 'contributor') {
-						return {
-							key: 'contributor',
-							getValue: (item: any) =>
-								item.contributor?.map((c: any) => c.name).join(' ') || '',
-						}
+						return 'contributorNames'
 					}
 					if (field === 'pubDate') {
 						return {
