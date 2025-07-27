@@ -1,6 +1,9 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { matchSorter } from 'match-sorter'
+import { z } from 'zod'
 import { getEnv } from '#app/utils/env.server.ts'
+import { getAllFileMetadatas } from '#app/utils/media.server.ts'
 import { FetchAPIHTTPServerTransport } from './fetch-stream-transport.server.ts'
 
 export const requestStorage = new AsyncLocalStorage<Request>()
@@ -45,6 +48,78 @@ server.registerTool(
 						null,
 						2,
 					),
+				},
+			],
+		}
+	},
+)
+
+// Add tool for searching media by various fields
+server.registerTool(
+	'search-media',
+	{
+		title: 'Search Media',
+		description:
+			'Search for media files by various fields (title, author, description, category, filepath, etc.)',
+		inputSchema: {
+			query: z
+				.string()
+				.describe('The search query to match against media fields'),
+			fields: z
+				.array(z.string())
+				.optional()
+				.describe(
+					'Specific fields to search in. If not provided, searches all fields. Available fields: title, author, description, category, filepath, contributor',
+				),
+			limit: z
+				.number()
+				.optional()
+				.describe('Maximum number of results to return. Defaults to no limit'),
+		},
+	},
+	async ({ query, fields, limit }) => {
+		const allMedia = await getAllFileMetadatas()
+
+		// Filter out null metadata entries
+		const validMedia = allMedia.filter(Boolean)
+
+		// Define the search keys - these are the fields that will be searched
+		const defaultKeys = [
+			'title',
+			'author',
+			'description',
+			'category',
+			'filepath',
+			{
+				key: 'contributor',
+				getValue: (item: any) =>
+					item.contributor?.map((c: any) => c.name).join(' ') || '',
+			},
+		]
+
+		// Use provided fields or default to all fields
+		const searchKeys = fields ? fields : defaultKeys
+
+		// Use match-sorter to search and rank results
+		const searchResults = matchSorter(validMedia, query, {
+			keys: searchKeys,
+			threshold: matchSorter.rankings.CONTAINS,
+		})
+
+		// Apply limit if specified
+		const limitedResults = limit ? searchResults.slice(0, limit) : searchResults
+
+		// Remove picture data to keep response size manageable
+		const cleanResults = limitedResults.map((media) => ({
+			...media,
+			picture: undefined,
+		}))
+
+		return {
+			content: [
+				{
+					type: 'text',
+					text: JSON.stringify(cleanResults, null, 2),
 				},
 			],
 		}

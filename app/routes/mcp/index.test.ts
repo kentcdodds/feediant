@@ -80,11 +80,12 @@ test('search-media tool returns search results', async () => {
 	const searchResults = JSON.parse(content[0]!.text)
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults.length).toBeGreaterThan(0)
-	
+
 	// Should find the koala.mp4 file
-	const koalaResult = searchResults.find((result: any) => 
-		result.title?.toLowerCase().includes('koala') || 
-		result.filepath?.toLowerCase().includes('koala')
+	const koalaResult = searchResults.find(
+		(result: any) =>
+			result.title?.toLowerCase().includes('koala') ||
+			result.filepath?.toLowerCase().includes('koala'),
 	)
 	expect(koalaResult).toBeDefined()
 })
@@ -100,14 +101,14 @@ test('search-media tool searches by title', async () => {
 	expect(result).toBeDefined()
 	const content = result.content as Array<{ type: string; text: string }>
 	const searchResults = JSON.parse(content[0]!.text)
-	
+
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults.length).toBeGreaterThan(0)
-	
+
 	// Should find "Mr. Poppers Penguins.mp3"
-	const poppersResult = searchResults.find((result: any) => 
-		result.title?.includes('Poppers') || 
-		result.filepath?.includes('Poppers')
+	const poppersResult = searchResults.find(
+		(result: any) =>
+			result.title?.includes('Poppers') || result.filepath?.includes('Poppers'),
 	)
 	expect(poppersResult).toBeDefined()
 })
@@ -123,14 +124,15 @@ test('search-media tool searches by author', async () => {
 	expect(result).toBeDefined()
 	const content = result.content as Array<{ type: string; text: string }>
 	const searchResults = JSON.parse(content[0]!.text)
-	
+
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults.length).toBeGreaterThan(0)
-	
+
 	// Should find "Rhythm of War The Stormlight Archive, Book 4.mp3"
-	const stormlightResult = searchResults.find((result: any) => 
-		result.title?.includes('Stormlight') || 
-		result.filepath?.includes('Stormlight')
+	const stormlightResult = searchResults.find(
+		(result: any) =>
+			result.title?.includes('Stormlight') ||
+			result.filepath?.includes('Stormlight'),
 	)
 	expect(stormlightResult).toBeDefined()
 })
@@ -140,22 +142,22 @@ test('search-media tool with fields parameter', async () => {
 
 	const result = await client.callTool({
 		name: 'search-media',
-		arguments: { 
+		arguments: {
 			query: 'dramatized',
-			fields: ['category', 'filepath']
+			fields: ['category', 'filepath'],
 		},
 	})
 
 	expect(result).toBeDefined()
 	const content = result.content as Array<{ type: string; text: string }>
 	const searchResults = JSON.parse(content[0]!.text)
-	
+
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults.length).toBeGreaterThan(0)
-	
+
 	// Should find files in the dramatized directory
-	const dramatizedResult = searchResults.find((result: any) => 
-		result.filepath?.includes('dramatized')
+	const dramatizedResult = searchResults.find((result: any) =>
+		result.filepath?.includes('dramatized'),
 	)
 	expect(dramatizedResult).toBeDefined()
 })
@@ -171,7 +173,7 @@ test('search-media tool returns empty array for no matches', async () => {
 	expect(result).toBeDefined()
 	const content = result.content as Array<{ type: string; text: string }>
 	const searchResults = JSON.parse(content[0]!.text)
-	
+
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(0)
 })
@@ -181,16 +183,16 @@ test('search-media tool with limit parameter', async () => {
 
 	const result = await client.callTool({
 		name: 'search-media',
-		arguments: { 
-			query: 'mp',  // Should match multiple files
-			limit: 2
+		arguments: {
+			query: 'mp', // Should match multiple files
+			limit: 2,
 		},
 	})
 
 	expect(result).toBeDefined()
 	const content = result.content as Array<{ type: string; text: string }>
 	const searchResults = JSON.parse(content[0]!.text)
-	
+
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults.length).toBeLessThanOrEqual(2)
 })
