@@ -196,3 +196,22 @@ test('search-media tool with limit parameter', async () => {
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults.length).toBeLessThanOrEqual(2)
 })
+
+test('search-media tool with contributor field in fields parameter', async () => {
+	const { client } = await setupClient()
+
+	const result = await client.callTool({
+		name: 'search-media',
+		arguments: {
+			query: 'narrator', // Search for contributors/narrators
+			fields: ['contributor', 'title'],
+		},
+	})
+
+	expect(result).toBeDefined()
+	const content = result.content as Array<{ type: string; text: string }>
+	const searchResults = JSON.parse(content[0]!.text)
+
+	expect(Array.isArray(searchResults)).toBe(true)
+	// The search should work correctly even when contributor is explicitly specified in fields
+})

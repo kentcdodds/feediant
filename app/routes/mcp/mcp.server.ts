@@ -98,7 +98,19 @@ server.registerTool(
 		]
 
 		// Use provided fields or default to all fields
-		const searchKeys = fields ? fields : defaultKeys
+		// If fields are provided, we need to map them to the correct format for match-sorter
+		const searchKeys = fields
+			? fields.map((field) => {
+					if (field === 'contributor') {
+						return {
+							key: 'contributor',
+							getValue: (item: any) =>
+								item.contributor?.map((c: any) => c.name).join(' ') || '',
+						}
+					}
+					return field
+				})
+			: defaultKeys
 
 		// Use match-sorter to search and rank results
 		const searchResults = matchSorter(validMedia, query, {
