@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { matchSorter } from 'match-sorter'
 import { z } from 'zod'
 import { getEnv } from '#app/utils/env.server.ts'
-import { getAllFileMetadatas } from '#app/utils/media.server.ts'
+import { getAllFileMetadatas } from '#app/utils/item.server.ts'
 import { FetchAPIHTTPServerTransport } from './fetch-stream-transport.server.ts'
 
 export const requestStorage = new AsyncLocalStorage<Request>()
@@ -81,9 +81,10 @@ server.registerTool(
 		const allMedia = await getAllFileMetadatas()
 
 		// Filter out null metadata entries and preprocess contributor field for search
-		const validMedia = allMedia.filter(Boolean).map(media => ({
+		const validMedia = allMedia.filter(Boolean).map((media) => ({
 			...media,
-			contributorNames: media?.contributor?.map((c: any) => c.name).join(' ') || ''
+			contributorNames:
+				media?.contributor?.map((c: any) => c.name).join(' ') || '',
 		}))
 
 		// Define the search keys - these are the fields that will be searched
@@ -120,7 +121,9 @@ server.registerTool(
 							getValue: (item: any) => {
 								if (!item.pubDate) return ''
 								const date = new Date(item.pubDate)
-								return isNaN(date.getTime()) ? '' : date.getFullYear().toString()
+								return isNaN(date.getTime())
+									? ''
+									: date.getFullYear().toString()
 							},
 						}
 					}
@@ -137,17 +140,11 @@ server.registerTool(
 		// Apply limit if specified
 		const limitedResults = limit ? searchResults.slice(0, limit) : searchResults
 
-		// Remove picture data to keep response size manageable
-		const cleanResults = limitedResults.map((media) => ({
-			...media,
-			picture: undefined,
-		}))
-
 		return {
 			content: [
 				{
 					type: 'text',
-					text: JSON.stringify(cleanResults, null, 2),
+					text: JSON.stringify(limitedResults, null, 2),
 				},
 			],
 		}

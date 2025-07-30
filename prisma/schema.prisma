@@ -12,25 +12,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Feed {
+enum ManualFeedType {
+  MANUAL
+}
+
+enum AutoFeedType {
+  AUTO
+}
+
+model ManualFeed {
   id          String  @id @default(cuid())
   name        String
   description String?
+  metadata    Json?
+
+  type       ManualFeedType @default(MANUAL)
+  /// MANUAL or METADATA_ASC/DESC
+  sortMode   SortMode       @default(MANUAL)
+  /// required only for METADATA_* modes - Example: [{"pubDate": "desc"}]
+  sortFields Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  media Media[]
+  medias ManualMedia[]
 }
 
-model Media {
-  id       String @id @default(cuid())
-  filePath String
+model AutoFeed {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  metadata    Json?
+
+  /// https://jsonlogic.com/
+  autoMatchRules Json
+
+  type       AutoFeedType @default(AUTO)
+  sortMode   SortMode     @default(METADATA_ASC)
+  /// required only for METADATA_* modes - Example: [{"pubDate": "desc"}]
+  sortFields Json         @default("[{\"pubDate\": \"desc\"}]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum SortMode {
+  MANUAL
+  METADATA_ASC
+  METADATA_DESC
+}
+
+model ManualMedia {
+  id        String @id @default(cuid())
+  filePath  String
+  /// required only for MANUAL mode
+  sortOrder Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  feed   Feed   @relation(fields: [feedId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  feed   ManualFeed @relation(fields: [feedId], references: [id], onDelete: Cascade)
   feedId String
 
   @@index([feedId])

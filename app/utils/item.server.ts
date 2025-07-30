@@ -1,13 +1,17 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { openFile } from '@remix-run/lazy-file/fs'
+import JsonLogic from 'json-logic-js'
 import md5 from 'md5-hex'
 import * as mimeTypes from 'mime-types'
 import * as mm from 'music-metadata'
 import pLimit from 'p-limit'
+import { href } from 'react-router'
 import { z } from 'zod'
 import { cache, cachified } from './cache.server.ts'
 import { getEnv } from './env.server.ts'
+
+console.log({ JsonLogic })
 
 const { MEDIA_PATHS } = getEnv()
 
@@ -32,7 +36,7 @@ export const MetadataSchema = z.object({
 	id: z.string(),
 	title: z.string(),
 	author: z.string(),
-	pubDate: z.date().optional(),
+	pubDate: z.string().optional(),
 
 	description: z.string(),
 	content: z.string(),
@@ -41,7 +45,6 @@ export const MetadataSchema = z.object({
 	duration: z.number().optional(),
 	type: z.string(),
 	contentType: z.string(),
-	picture: z.custom<mm.IPicture>().optional(),
 	contributor: z.array(contributorSchema),
 
 	trackNumber: z.number().optional(),
@@ -77,7 +80,28 @@ export async function getAllFileMetadatas() {
 	const items = await Promise.all(
 		files.map((file) => limit(() => getFileMetadata(file))),
 	)
-	return items.filter(Boolean)
+	// TODO: figure out why Boolean isn't filtering out nulls in the type system
+	return items.filter(Boolean) as Array<Metadata>
+}
+
+export async function getMatchingFileMetadatas(
+	autoMatchRules: JsonLogic.RulesLogic,
+) {
+	const key = ['matching-files', md5(JSON.stringify(autoMatchRules))].join(':')
+
+	return cachified({
+		ttl: 60 * 60 * 24,
+		swr: 60 * 60 * 36,
+		key,
+		async getFreshValue() {
+			const allFiles = await getAllFileMetadatas()
+			const matchingFiles = allFiles.filter((file) =>
+				JsonLogic.apply(autoMatchRules, file),
+			)
+			return matchingFiles
+		},
+		cache,
+	})
 }
 
 export async function getFileMetadata(
@@ -100,6 +124,46 @@ export async function getFileMetadata(
 		},
 		cache,
 	})
+}
+
+export async function getFilePicture(
+	filepath: string,
+): Promise<mm.IPicture | null> {
+	const key = ['file-picture', filepath].join(':')
+	const cached = await cache.get(key)
+	const forceFresh = cached
+		? (await fs.promises.stat(filepath)).mtimeMs > cached.metadata.createdTime
+		: false
+
+	return cachified({
+		ttl: 60 * 60 * 24 * 30, // 30 days
+		swr: 60 * 60 * 12, // 12 hours
+		forceFresh,
+		key,
+		async getFreshValue() {
+			return getFilePictureImpl(filepath)
+		},
+		cache,
+	})
+}
+
+async function getFilePictureImpl(
+	filepath: string,
+): Promise<mm.IPicture | null> {
+	try {
+		const file = openFile(filepath)
+		const rawMetadata = await mm.parseWebStream(file.stream())
+		const { picture: [picture] = [] } = rawMetadata.common
+		return picture || null
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error(`Trouble getting picture for "${filepath}"`)
+			console.error(error.stack)
+		} else {
+			console.error(error)
+		}
+		return null
+	}
 }
 
 async function getFileMetadataImpl(filepath: string): Promise<Metadata | null> {
@@ -151,14 +215,12 @@ async function getFileMetadataImpl(filepath: string): Promise<Metadata | null> {
 				rawMetadata.common.date,
 		} = audibleMetadata
 
-		const { picture: [picture] = [] } = rawMetadata.common
-
 		const fallbackType =
 			path.extname(filepath) === '.m4b'
 				? 'audio/mpeg' // officially this should be "audio/mp4a-latm", but it doesn't work 🤷‍♂️
 				: 'application/octet-stream'
 
-		let pubDate = date ? new Date(date) : undefined
+		let pubDate = date ? new Date(date).toUTCString() : undefined
 
 		const id = md5(filepath)
 
@@ -180,7 +242,6 @@ async function getFileMetadataImpl(filepath: string): Promise<Metadata | null> {
 			type: mimeTypes.lookup(filepath) || fallbackType,
 			contentType:
 				mimeTypes.contentType(path.extname(filepath)) || fallbackType,
-			picture,
 			contributor: narrators.split(',').map((name) => ({ name: name.trim() })),
 
 			trackNumber: rawMetadata.common.track.no ?? undefined,
@@ -300,31 +361,10 @@ export async function getAllMediaWithDirectories(): Promise<Array<MediaNode>> {
 	return result
 }
 
+// This function is now deprecated since pictures are no longer included in metadata by default
+// Use getAllMediaWithDirectories() instead
 export async function getAllMediaWithDirectoriesNoPictures() {
-	const media = await getAllMediaWithDirectories()
-	return media.map((node) => {
-		if (node.type === 'directory') {
-			node.children = node.children.map((child) => {
-				if (child.type === 'file' && child.metadata) {
-					return {
-						...child,
-						metadata: { ...child.metadata, picture: undefined },
-					}
-				}
-				return child
-			})
-		} else if (node.type === 'file' && node.metadata) {
-			return {
-				...node,
-				metadata: {
-					...node.metadata,
-					picture: undefined,
-				},
-			}
-		} else {
-			return node
-		}
-	})
+	return getAllMediaWithDirectories()
 }
 
 export async function getFileIdsByDirectory(
@@ -342,4 +382,10 @@ export async function getMetadataById(
 	const targetFile = files.find((file) => md5(file) === fileId)
 	if (!targetFile) return null
 	return getFileMetadata(targetFile)
+}
+
+export function getPictureUrl(itemId: string): string {
+	return href('/items/:itemId/picture', {
+		itemId,
+	})
 }

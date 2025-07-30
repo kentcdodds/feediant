@@ -102,3 +102,9 @@ export async function downloadFile(url: string, retries: number = 0) {
 		return downloadFile(url, retries + 1)
 	}
 }
+
+export function removeEmpty(obj: Record<string, unknown>) {
+	return Object.fromEntries(
+		Object.entries(obj).filter(([_, value]) => value !== undefined),
+	)
+}

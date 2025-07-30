@@ -108,7 +108,7 @@ test('search-media tool searches by title', async () => {
 	expect(poppersResult.title).toBe("Mr. Popper's Penguins")
 	expect(poppersResult.author).toBe('Richard Atwater, Florence Atwater')
 	expect(poppersResult.filepath).toContain('kids/Mr. Poppers Penguins.mp3')
-	expect(poppersResult.category).toContain('Children\'s Audiobooks')
+	expect(poppersResult.category).toContain("Children's Audiobooks")
 })
 
 test('search-media tool searches by author', async () => {
@@ -128,10 +128,15 @@ test('search-media tool searches by author', async () => {
 
 	// Should find the Brandon Sanderson book specifically
 	const sandersonResult = searchResults[0]
-	expect(sandersonResult.title).toBe('Rhythm of War: The Stormlight Archive, Book 4')
+	expect(sandersonResult.title).toBe(
+		'Rhythm of War: The Stormlight Archive, Book 4',
+	)
 	expect(sandersonResult.author).toBe('Brandon Sanderson')
 	expect(sandersonResult.category).toContain('Science Fiction & Fantasy')
-	expect(sandersonResult.contributor.map((c: any) => c.name)).toEqual(['Kate Reading', 'Michael Kramer'])
+	expect(sandersonResult.contributor.map((c: any) => c.name)).toEqual([
+		'Kate Reading',
+		'Michael Kramer',
+	])
 })
 
 test('search-media tool with fields parameter', async () => {
@@ -153,10 +158,17 @@ test('search-media tool with fields parameter', async () => {
 	expect(searchResults).toHaveLength(2)
 
 	// Should find both files in the dramatized directory
-	expect(searchResults.every((result: any) => result.filepath.includes('dramatized'))).toBe(true)
-	
+	expect(
+		searchResults.every((result: any) =>
+			result.filepath.includes('dramatized'),
+		),
+	).toBe(true)
+
 	const titles = searchResults.map((result: any) => result.title).sort()
-	expect(titles).toEqual(['Scripture Scouts: The Book of Mormon', 'The Last Battle (Dramatized)'])
+	expect(titles).toEqual([
+		'Scripture Scouts: The Book of Mormon',
+		'The Last Battle (Dramatized)',
+	])
 })
 
 test('search-media tool returns empty array for no matches', async () => {
@@ -192,7 +204,7 @@ test('search-media tool with limit parameter', async () => {
 
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(3) // Exactly limited to 3
-	
+
 	// All results should be audio/mpeg files
 	searchResults.forEach((result: any) => {
 		expect(result.type).toBe('audio/mpeg')
@@ -216,10 +228,12 @@ test('search-media tool with fields parameter works correctly', async () => {
 
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(1)
-	
+
 	// Should find Brandon Sanderson book when searching author field specifically
 	const sandersonResult = searchResults[0]
-	expect(sandersonResult.title).toBe('Rhythm of War: The Stormlight Archive, Book 4')
+	expect(sandersonResult.title).toBe(
+		'Rhythm of War: The Stormlight Archive, Book 4',
+	)
 	expect(sandersonResult.author).toBe('Brandon Sanderson')
 })
 
@@ -240,7 +254,7 @@ test('search-media tool searches by media type', async () => {
 
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(1)
-	
+
 	// Should find the video file with mp4 type
 	const mp4Result = searchResults[0]
 	expect(mp4Result.title).toBe('koala.mp4')
@@ -264,7 +278,7 @@ test('search-media tool searches by copyright', async () => {
 
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(1)
-	
+
 	// Should find media with Audible in copyright
 	const audibleResult = searchResults[0]
 	expect(audibleResult.title).toBe('Free: The Secret Life of Walter Mitty')
@@ -288,11 +302,11 @@ test('search-media tool searches by publish date year', async () => {
 
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(1)
-	
+
 	// Should find media published in 2020
 	const result2020 = searchResults[0]
 	expect(result2020.title).toBe('Rhythm of War: The Stormlight Archive, Book 4')
-	expect(result2020.pubDate).toBe('2020-11-17T00:00:00.000Z')
+	expect(result2020.pubDate).toContain('2020-11-17')
 })
 
 test('search-media tool searches by genre/category', async () => {
@@ -301,7 +315,7 @@ test('search-media tool searches by genre/category', async () => {
 	const result = await client.callTool({
 		name: 'search-media',
 		arguments: {
-			query: 'Children\'s Audiobooks',
+			query: "Children's Audiobooks",
 			fields: ['category'],
 		},
 	})
@@ -312,11 +326,11 @@ test('search-media tool searches by genre/category', async () => {
 
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(2)
-	
+
 	// Should find media in the children's audiobooks category
 	const titles = searchResults.map((result: any) => result.title).sort()
-	expect(titles).toEqual(["Mr. Popper's Penguins", "The Odious Ogre"])
-	
+	expect(titles).toEqual(["Mr. Popper's Penguins", 'The Odious Ogre'])
+
 	// Both should have Children's Audiobooks in their categories
 	searchResults.forEach((result: any) => {
 		expect(result.category).toContain("Children's Audiobooks")
@@ -340,9 +354,11 @@ test('search-media tool searches by contributor with fields parameter', async ()
 
 	expect(Array.isArray(searchResults)).toBe(true)
 	expect(searchResults).toHaveLength(1)
-	
+
 	// Should find the Walter Mitty audiobook narrated by Ben Stiller
 	const stillerResult = searchResults[0]
 	expect(stillerResult.title).toBe('Free: The Secret Life of Walter Mitty')
-	expect(stillerResult.contributor.map((c: any) => c.name)).toEqual(['Ben Stiller'])
+	expect(stillerResult.contributor.map((c: any) => c.name)).toEqual([
+		'Ben Stiller',
+	])
 })
